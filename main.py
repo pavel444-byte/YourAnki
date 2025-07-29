@@ -31,3 +31,15 @@ anki_file_type = "apkg"
 anki_file_name = f"anki_{selected_level}_{selected_topic}.{anki_file_type}"
 st.write("Anki file name:", anki_file_name)
 
+
+st.button("Continue", key="continue_button")
+if st.session_state.get("continue_button"):
+    st.write("Continuing with the selected options...")
+    # Here you can add the logic to generate the Anki file based on the selected level and topic
+    # For example, you might call a function that generates the Anki file and saves it with the name anki_file_name
+    st.switch_page("optinal_settings.py")
+else:
+    st.write("Please select your English level and a topic to continue.")
+    st.stop()
+
+
