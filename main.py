@@ -5,6 +5,8 @@ import colorama
 import pandas as pd
 import numpy as np
 import requests
+import json
+import subprocess
 
 english_levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
 st.write("Note: For more infromation about english levels, please visit [this link](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages).")
@@ -25,3 +27,7 @@ selected_topic = st.selectbox(
     placeholder="Choose a topic...",
 )
 st.write("You selected:", selected_topic)
+anki_file_type = "apkg"
+anki_file_name = f"anki_{selected_level}_{selected_topic}.{anki_file_type}"
+st.write("Anki file name:", anki_file_name)
+
