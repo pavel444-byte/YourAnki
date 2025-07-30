@@ -23,18 +23,19 @@ def generate_anki_deck_with_ai(level: str, topic: str, cards_count: int, custom_
     - сырой текст карточек (для отображения)
     """
 
-    prompt = f"""You're an assistant helping generate Anki flashcards.
-English level: {level}
-Topic: {topic}
-Instruction or example: {custom_text if custom_text else 'Generate 5 basic vocabulary flashcards with English word, translation and example sentence.'}
-Format:
-- Front: English word
-- Back: Translation and example sentence
+    prompt = f"""
+    You are an English vocabulary card generator for Anki.
+Your task is to generate cards in the following format:
+Word | Meaning: [simple definition]. Example: [usage of word in sentence].
+For example:
+Village 
+---------------------------------------------------------------------------
+Meaning: Village is a very small town. Example: I live in my small village.
 
 Generate {cards_count} cards."""
 
     response = client.chat.completions.create(
-        model="openrouter/openai/gpt-4o-mini",
+        model="moonshotai/kimi-k2",
         messages=[{"role": "user", "content": prompt}],
     )
 
@@ -126,15 +127,14 @@ cards_count = st.number_input(
 
 
 st.write("This is end but you can write example for your card here:")
-example_text = st.text_area("Example text for your card:", height=200)
 
-st.button("Generate Anki Cards", key="generate_cards")
+
 if st.button("Generate Anki Cards"):
     if not selected_level or not selected_topic:
         st.error("Please select both level and topic.")
     else:
         with st.spinner("Generating cards using AI and preparing Anki deck..."):
-            anki_file, raw_cards = generate_anki_deck_with_ai(selected_level, selected_topic, cards_count, example_text)
+            anki_file, raw_cards = generate_anki_deck_with_ai(selected_level, selected_topic, cards_count)
             st.success("✅ Done! Anki deck is ready.")
             st.code(raw_cards, language="markdown")
             with open(anki_file, "rb") as f:
