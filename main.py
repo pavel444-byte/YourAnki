@@ -14,6 +14,71 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+def generate_anki_deck_with_ai(level: str, topic: str, cards_count: int, custom_text: str = "") -> tuple[str, str]:
+    """
+    Комбо-функция: генерирует карточки через ИИ + создаёт Anki-файл.
+    
+    Возвращает:
+    - путь к .apkg файлу
+    - сырой текст карточек (для отображения)
+    """
+
+    prompt = f"""You're an assistant helping generate Anki flashcards.
+English level: {level}
+Topic: {topic}
+Instruction or example: {custom_text if custom_text else 'Generate 5 basic vocabulary flashcards with English word, translation and example sentence.'}
+Format:
+- Front: English word
+- Back: Translation and example sentence
+
+Generate {cards_count} cards."""
+
+    response = client.chat.completions.create(
+        model="openrouter/openai/gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    cards_text = response.choices[0].message.content or ""
+
+    model = genanki.Model(
+        model_id=1607392319,
+        name='Simple Model',
+        fields=[
+            {'name': 'Front'},
+            {'name': 'Back'},
+        ],
+        templates=[
+            {
+                'name': 'Card 1',
+                'qfmt': '{{Front}}',
+                'afmt': '{{FrontSide}}<hr id="answer">{{Back}}',
+            },
+        ])
+
+    import uuid
+    deck_id = int(uuid.uuid4().int >> 96)
+    deck = genanki.Deck(deck_id, f"English {level} - {topic}")
+
+    for line in cards_text.splitlines():
+        if ':' in line:
+            front, back = line.split(':', 1)
+            deck.add_note(genanki.Note(model=model, fields=[front.strip(), back.strip()]))
+
+    file_name = f"anki_{level}_{topic}.apkg"
+    genanki.Package(deck).write_to_file(file_name)
+
+    return file_name, cards_text
+
+    
+
+
+
+
+
+
+
+
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://openrouter.ai/api/v1")
 
 
@@ -51,7 +116,13 @@ anki_file_type = "apkg"
 anki_file_name = f"anki_{selected_level}_{selected_topic}.{anki_file_type}"
 st.write("Anki file name:", anki_file_name)
 
-
+cards_count = st.number_input(
+    "How many cards do you want to generate?",
+    min_value=1,
+    max_value=100,
+    value=10,  # Default value
+    step=1,
+)
 
 
 st.write("This is end but you can write example for your card here:")
@@ -59,18 +130,14 @@ example_text = st.text_area("Example text for your card:", height=200)
 
 st.button("Generate Anki Cards", key="generate_cards")
 if st.button("Generate Anki Cards"):
-    if selected_level and selected_topic == None:
-        st.error("Please select both your English level and a topic.")
+    if not selected_level or not selected_topic:
+        st.error("Please select both level and topic.")
     else:
-        st.success("Generating Anki cards...")
-        # Here you would call your function to generate the Anki cards
-        # For example:
-        # generate_anki_cards(selected_level, selected_topic, example_text)
-        generate_anki()
-def generate_anki():
-
-    model = ""
-
-
-
-
+        with st.spinner("Generating cards using AI and preparing Anki deck..."):
+            anki_file, raw_cards = generate_anki_deck_with_ai(selected_level, selected_topic, cards_count, example_text)
+            st.success("✅ Done! Anki deck is ready.")
+            st.code(raw_cards, language="markdown")
+            with open(anki_file, "rb") as f:
+                st.download_button("📥 Download Anki", f, file_name=anki_file, mime="application/apkg")
+                st.write("You can now import this file into Anki to start studying your new flashcards.")
+                st.write("Do you have issues or questions? Please, [create an issue on GitHub](https://github.com/pavel444-byte/YourAnki/issues)")
