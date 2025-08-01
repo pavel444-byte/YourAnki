@@ -27,12 +27,16 @@ def generate_anki_deck_with_ai(level: str, topic: str, cards_count: int, custom_
     You are an English vocabulary card generator for Anki.
 Your task is to generate cards in the following format:
 Word | Meaning: [simple definition]. Example: [usage of word in sentence].
+
 For example:
+(Front For Anki) 
 Village 
 ---------------------------------------------------------------------------
-Meaning: Village is a very small town. Example: I live in my small village.
-
-Generate {cards_count} cards."""
+___________________________________________________________________________
+ Meaning: Village is a very small town. Example: I live in my small village.
+(Back For Anki)
+Generate {cards_count} cards for the topic "{topic}" at the level "{level}".
+."""
 
     response = client.chat.completions.create(
         model="moonshotai/kimi-k2",
@@ -72,14 +76,6 @@ Generate {cards_count} cards."""
 
     
 
-
-
-
-
-
-
-
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://openrouter.ai/api/v1")
 
 
@@ -87,11 +83,6 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://openroute
 st.set_page_config(page_title="Anki Card Generator", page_icon=":book:", layout="wide")
 st.title("Anki Card Generator")
 st.write("Welcome to the Anki Card Generator! This app helps you create Anki flashcards based on your English learning level and topics of interest.")
-
-
-
-
-
 
 
 english_levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
